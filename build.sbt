@@ -1,6 +1,6 @@
 name := "MUD"
 version := "1.0"
-scalaVersion := "2.12.9"
+scalaVersion := "2.12.8"
 
 mainClass in (Compile, packageBin) := Some("mud.Main")
 
