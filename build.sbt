@@ -2,6 +2,9 @@ name := "MUD"
 version := "1.0"
 scalaVersion := "2.12.8"
 
+run / fork := true
+run / connectInput := true
+
 mainClass in (Compile, packageBin) := Some("mud.Main")
 
 mainClass in (Compile, run) := Some("mud.Main")
