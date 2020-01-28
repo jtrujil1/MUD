@@ -12,6 +12,7 @@ object Main {
 
 		var playerName:String = ""
 		println(s"Do you want your player to be called $name (Y/N)?")
+		def response:Unit = 
 		readLine().toLowerCase match{
 			case "y" | "yes" => playerName = name
 			case "n" | "no" =>
