@@ -13,8 +13,8 @@ object Main {
 		var playerName:String = ""
 		println(s"Do you want your player to be called $name (Y/N)?")
 		readLine().toLowerCase match{
-			case y => playerName = name
-			case n =>
+			case "y" | "yes" => playerName = name
+			case "n" | "no" =>
 			println("What is your player's name?")
 			playerName = readLine()
 		}
@@ -30,7 +30,9 @@ object Main {
 			case _ => println("Please enter a valid number.")
 		}
 
-		val player = new Player(playerName, Nil, ???)
+		Room.readRooms()
+
+		val player = new Player(playerName, Nil, Room.room(playerRoom))
 
 		var command = readLine()
 		while (command != "exit"){
