@@ -6,13 +6,13 @@ class Player(val name: String, private var inventory: List[Item], position: Room
 
     def processCommand(command: String, itemName:String = "None"): Unit =
         command match{
-            case "look" => println(position.desc)
-            case ("inventory" | "inv") => inventoryListing()
+            case "look" => println(position.description())
+            case "inventory" | "inv" => println(inventoryListing())
             case "get" =>
-            position.getItem(itemName)
-            //if(position.getItem(itemName) != None) addtoInventory(position.getItem(itemName))
+            //position.getItem(itemName)
+            if(position.getItem(itemName) != None) addToInventory(position.getItem(itemName).get)
             case "drop" =>
-           // if(getFromIventory(itemName) != None) position.dropItem(getFromInventory(itemName).get)
+            if(getFromInventory(itemName) != None) position.dropItem(getFromInventory(itemName).get)
             case "help" =>
             println(""""All Commands:
             north, south, east, west, up, down - for movement (abbreviations also work)
@@ -29,7 +29,8 @@ class Player(val name: String, private var inventory: List[Item], position: Room
     def getFromInventory(itemName: String): Option[Item] =
         inventory.find(_.name.toLowerCase == itemName.toLowerCase) match {
             case Some(item) =>
-            inventory = inventory.filter(_ != item)//use patch instead to not drop everything that is the same
+            //inventory = inventory.filter(_ != item)//use patch instead to not drop everything that is the same
+            inventory = inventory.patch(inventory.indexOf(item),Nil,1)
             printf("\n%s dropped in the %s.", itemName, this.position.name)
             Some(item)
             case None =>
@@ -41,7 +42,7 @@ class Player(val name: String, private var inventory: List[Item], position: Room
         if(position.getItem(item.name) != None){
             position.getItem(item.name)::inventory
             println()
-            printf("\n%s has been added to your inventory.", item)
+            println(s"$item has been added to your inventory.")
         }else{
             println("That is not a valid item.")
         }
@@ -58,12 +59,18 @@ class Player(val name: String, private var inventory: List[Item], position: Room
 
     def move(dir: String): Unit =
         dir match{
-            case "north" | "n" => 
+            case "north" | "n" =>
+            if(position.getExit(dir) != None) position = position.getExit(dir).get
             case "south" | "s" =>
+            if(position.getExit(dir) != None) position = position.getExit(dir).get
             case "east" | "e" =>
+            if(position.getExit(dir) != None) position = position.getExit(dir).get
             case "west" | "w" =>
+            if(position.getExit(dir) != None) position = position.getExit(dir).get
             case "up" | "u" =>
+            if(position.getExit(dir) != None) position = position.getExit(dir).get
             case "down" | "d" =>
+            if(position.getExit(dir) != None) position = position.getExit(dir).get
             case _ => println("Please enter a valid command. If you want to look at the available commands enter \"help\".")
         }
 }
