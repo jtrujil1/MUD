@@ -12,9 +12,10 @@ object Main {
 
 		var playerName:String = ""
 		println(s"Do you want your player to be called $name (Y/N)?")
+		def response:Unit = 
 		readLine().toLowerCase match{
-			case y => playerName = name
-			case n =>
+			case "y" | "yes" => playerName = name
+			case "n" | "no" =>
 			println("What is your player's name?")
 			playerName = readLine()
 		}
