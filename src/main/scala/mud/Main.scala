@@ -22,7 +22,7 @@ object Main {
 		//println("Enter the password for your player.")
 		var playerRoom: Int = 0
 		println("Select the world you want to enter.")
-		println("1. Room A\n2. Room B \n3. Room C")
+		println("1. Dojo\n2. Underground \n3. Nanfang Village")
 		readInt() match {
 			case 1 => playerRoom = 0
 			case 2 => playerRoom = 1
