@@ -11,10 +11,12 @@ class Player(val name: String, private var inventory: List[Item], position: Room
             case "inv" => inventoryListing()
             case "get" =>
             position.getItem(itemName)
-            if(position.getItem(itemName) != None) addtoInventory(position.getItem(itemName))
+            //if(position.getItem(itemName) != None) addtoInventory(position.getItem(itemName))
             case "drop" =>
-            if(getFromIventory(itemName) != None) position.dropItem(getFromInventory(itemName).get)
-            case "help" => 
+           // if(getFromIventory(itemName) != None) position.dropItem(getFromInventory(itemName).get)
+            case "help" =>
+            println(""""
+            """")
             case _ => move(command)
         }
 

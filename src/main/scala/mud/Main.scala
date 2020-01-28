@@ -34,10 +34,11 @@ object Main {
 
 		var command = readLine()
 		while (command != "exit"){
-				if(command.toLowerCase.substring(0,3) == "get")
-					player.processCommand("get", command.toLowerCase.substring(4,command.length))
-				if (command.toLowerCase.substring(0,4) == "drop")
-					player.processCommand("drop", command.toLowerCase.substring(5,command.length))
+				var commandArray = command.toLowerCase.split(" +", 2)
+				if(commandArray(0).trim == "get")
+					player.processCommand("get", commandArray(1).trim)
+				if (commandArray(0).trim == "drop")
+					player.processCommand("drop", commandArray(1).trim)
 				else
 					player.processCommand(command)
 		}
