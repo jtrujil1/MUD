@@ -45,19 +45,7 @@ object Main {
 		while (command.trim != "exit"){
 			println("Enter a command.")
 			command = readLine()
-			var commandArray = command.toLowerCase.split(" +", 2)
-			if(commandArray(0).trim == "get")
-				if(commandArray.length <= 1) 
-					println("Invalid command, please try again.")
-				else 
-					player1.processCommand("get", commandArray(1).trim)
-			if (commandArray(0).trim == "drop")
-				if(commandArray.length <= 1) 
-					println("Invalid command, please try again.")
-				else 
-				player1.processCommand("drop", commandArray(1).trim)
-			else
-				player1.processCommand(command.toLowerCase.trim)
+			player1.processCommand(command)
 		}
 	}
 }

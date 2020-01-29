@@ -4,15 +4,16 @@ import scala.languageFeature.existentials
 
 class Player(var position: Room, private var inventory: List[Item], val name: String = "Player 1") {
 
-    def processCommand(command: String, itemName:String = "Item"): Unit =
-        command match{
+    def processCommand(command: String): Unit = {
+        val commandArray = command.split(" +", 2)
+        commandArray(0).toLowerCase match{
             case "look" => println(position.description())
             case "inventory" | "inv" => println(inventoryListing())
             case "get" =>
-            val item = position.getItem(itemName)
+            val item = position.getItem(commandArray(1))
             if(item != None) addToInventory(item.get)
             case "drop" =>
-            val item2 = getFromInventory(itemName)
+            val item2 = getFromInventory(commandArray(1))
             if(item2 != None) position.dropItem(item2.get)
             case "help" =>
             println("""All Commands:
@@ -32,7 +33,8 @@ class Player(var position: Room, private var inventory: List[Item], val name: St
             case "down" | "d" => move(command)
             case _ => println("Please enter a valid command. If you want to look at the available commands enter \"help\".")
         }
-
+    }
+    
     def getFromInventory(itemName: String): Option[Item] =
         inventory.find(_.name.toLowerCase == itemName.toLowerCase) match {
             case Some(item) =>
