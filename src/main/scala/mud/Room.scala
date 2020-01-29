@@ -56,7 +56,7 @@ object Room {
   val rooms = readRooms()
 
   def readRooms(): Array[Room] = {
-    val source = scala.io.Source.fromFile("target/world.txt")
+    val source = scala.io.Source.fromFile("world.txt")
     val lines = source.getLines()
     val r = Array.fill(lines.next.toInt)(readRoom(lines))
     source.close()
