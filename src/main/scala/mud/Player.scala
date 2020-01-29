@@ -2,7 +2,7 @@ package mud
 
 import scala.languageFeature.existentials
 
-class Player(val name: String, private var inventory: List[Item], var position: Room) {
+class Player(var position: Room, private var inventory: List[Item], val name: String = "Player 1") {
 
     def processCommand(command: String, itemName:String = "Item"): Unit =
         command match{
@@ -20,7 +20,7 @@ class Player(val name: String, private var inventory: List[Item], var position: 
             look - reprints the description of the current room
             inv/inventory - list the contents of your inventory
             get item - to get an item from the room and add it to your inventory
-            drop item - to drop an item from your inventory into the room.
+            drop item - to drop an item from your inventory into the room
             exit - leave the game
             help - print the available commands and what they do""")
             case "exit" => println("Thank you for playing.")
@@ -47,14 +47,14 @@ class Player(val name: String, private var inventory: List[Item], var position: 
     def addToInventory(item: Item): Unit = {
         inventory = item::inventory
         println()
-        println(s"${item.name} has been added to your inventory.")
+        println(s"The item ${item.name} has been added to your inventory.")
     }
 
     def inventoryListing(): String = {
         var invString:String = ""
         invString += "Inventory:\n"
         for(i <- 0 until inventory.length){
-                invString += ("     " + inventory(i).name + " - " + inventory(i).desc)
+                invString += ("     " + inventory(i).name + " - " + inventory(i).desc + "\n")
         }
         if(inventory.length == 0) invString += "No items in inventory."
         return invString
@@ -87,7 +87,6 @@ class Player(val name: String, private var inventory: List[Item], var position: 
             direction = position.getExit(5)
             if(direction != None)
                 position = direction.get
-            //case _ => println("Please enter a valid command. If you want to look at the available commands enter \"help\".")
         }
     }
 }

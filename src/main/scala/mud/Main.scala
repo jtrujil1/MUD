@@ -37,9 +37,9 @@ object Main {
 			}
 		}
 
-		//Room.readRooms()
+		printf("\nYou have chosen the %s\n", Room.rooms(playerRoom).name)
 
-		val player1 = new Player(playerName, Nil, Room.rooms(playerRoom))
+		val player1 = new Player(Room.rooms(playerRoom), Nil, playerName)
 
 		var command = ""
 		while (command.trim != "exit"){
