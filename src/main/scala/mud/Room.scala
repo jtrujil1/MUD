@@ -1,12 +1,12 @@
 package mud
 
-class Room(val name: String, val desc: String, private var items: List[Item], private val exits: Array[Int]) {
+class Room(val name: String, val desc: String, private var items: List[Item], private val exits: Array[String]) {
     def description(): String = {
         var descStr:String = ""
         descStr += s"$name\n$desc\nExits: "
         var counter = 0
         for (i <- 0 to 5){
-            if(exits(i) != -1){
+            if(exits(i) != "-1"){
                 var exit = ""
                 i match{
                     case 0 => exit = "north"
@@ -31,7 +31,7 @@ class Room(val name: String, val desc: String, private var items: List[Item], pr
     }
 
     def getExit(dir: Int): Option[Room] = {
-        if(exits(dir) != -1){
+        if(exits(dir) != "-1"){
             println("You have moved to " + Room.rooms(exits(dir)).name + ".")
             Some(Room.rooms(exits(dir)))
         }else{
@@ -55,19 +55,20 @@ class Room(val name: String, val desc: String, private var items: List[Item], pr
 object Room {
   val rooms = readRooms()
 
-  def readRooms(): Array[Room] = {
+  def readRooms(): Map[String, Room] = {
     val source = scala.io.Source.fromFile("world.txt")
     val lines = source.getLines()
-    val r = Array.fill(lines.next.toInt)(readRoom(lines))
+    val r = Array.fill(lines.next.toInt)(readRoom(lines)).toMap
     source.close()
     r
   }
 
-  def readRoom(lines: Iterator[String]): Room = {
+  def readRoom(lines: Iterator[String]): (String, Room) = {
+    val keyword = lines.next()
     val name = lines.next()
     val desc = lines.next()
     val items = List.fill(lines.next.toInt)(Item(lines.next(), lines.next()))
-    val exits = lines.next().split(",").map(_.toInt)
-    new Room(name, desc, items, exits)
+    val exits = lines.next().split(",").map(_.toString)
+    keyword -> new Room(name, desc, items, exits)
   }
 }

@@ -25,14 +25,14 @@ object Main {
 		}
 
 		//println("Enter the password for your player.")
-		var playerRoom: Int = -1
-		while(playerRoom == -1){
+		var playerRoom:String = "-1"
+		while(playerRoom == "-1"){
 			println("Select the world you want to enter.")
 			println("1. Dojo\n2. Underground \n3. Nanfang Village")
 			readLine().trim match {
-				case "1" => playerRoom = 0
-				case "2" => playerRoom = 1
-				case "3" => playerRoom = 2
+				case "1" => playerRoom = "Dojo"
+				case "2" => playerRoom = "Underground"
+				case "3" => playerRoom = "Nanfang"
 				case _ => println("Please enter a valid number.")
 			}
 		}
