@@ -1,6 +1,14 @@
 package mud
 
-class Room(val name: String, val desc: String, private var items: List[Item], private val exits: Array[String]) {
+import akka.actor.Actor
+import akka.actor.ActorRef
+
+class Room(val name: String, val desc: String, private var items: List[Item], private val exits: Array[String]) extends Actor {
+
+    def receive = {
+        case m => println("Unhandled message in Room: " + m)
+    }
+
     def description(): String = {
         var descStr:String = ""
         descStr += s"$name\n$desc\nExits: "
@@ -53,22 +61,5 @@ class Room(val name: String, val desc: String, private var items: List[Item], pr
 }
 
 object Room {
-  val rooms = readRooms()
 
-  def readRooms(): Map[String, Room] = {
-    val source = scala.io.Source.fromFile("world.txt")
-    val lines = source.getLines()
-    val r = Array.fill(lines.next.toInt)(readRoom(lines)).toMap
-    source.close()
-    r
-  }
-
-  def readRoom(lines: Iterator[String]): (String, Room) = {
-    val keyword = lines.next()
-    val name = lines.next()
-    val desc = lines.next()
-    val items = List.fill(lines.next.toInt)(Item(lines.next(), lines.next()))
-    val exits = lines.next().split(",").map(_.toString)
-    keyword -> new Room(name, desc, items, exits)
-  }
 }
