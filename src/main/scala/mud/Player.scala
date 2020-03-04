@@ -1,8 +1,22 @@
 package mud
 
 import scala.languageFeature.existentials
+import akka.actor.Actor
+import akka.actor.ActorRef
 
-class Player(var position: Room, private var inventory: List[Item], val name: String = "Player 1") {
+class Player(var position: Room, private var inventory: List[Item], val name: String = "Player 1") extends Actor {
+
+    import Player._
+    def receive = {
+        case CheckInput =>
+        if(in.ready) {
+            val input = in.readLine()
+            processCommand(input)
+        }
+        case PrintMessage(msg) => println(msg)
+        case TakeItem(item) =>
+        if(item != None) addToInventory(item.get)
+    }
 
     def processCommand(command: String): Unit = {
         val commandArray = command.split(" +", 2)
@@ -11,6 +25,7 @@ class Player(var position: Room, private var inventory: List[Item], val name: St
             case "inventory" | "inv" => println(inventoryListing())
             case "get" =>
             val item = position.getItem(commandArray(1))
+            position ! Room.GetItem
             if(item != None) addToInventory(item.get)
             case "drop" =>
             val item2 = getFromInventory(commandArray(1))
@@ -89,6 +104,21 @@ class Player(var position: Room, private var inventory: List[Item], val name: St
             direction = position.getExit(5)
             if(direction != None)
                 position = direction.get
+                println("You have moved to " + position.name + ".")
+                position ! Room.PrintDescription
+                
         }
     }
+}
+
+object Player {
+    case class CheckInput(input: String)
+    case class PrintMessage(msg: String)
+    case class TakeExit(exit: Option[ActorRef])
+    case class TakeItem(item: Option[Item])
+
+    case class MoveRooms(dir: String)
+    case class PrintInventory()
+    case class AddItem(item: Item)
+    case class GetFromInv(itemName: String)
 }
