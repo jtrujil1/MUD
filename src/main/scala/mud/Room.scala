@@ -3,7 +3,7 @@ package mud
 import akka.actor.Actor
 import akka.actor.ActorRef
 
-class Room(val name: String, val desc: String, private var items: List[Item], private val exitNames: Array[String]) extends Actor {
+class Room(val name: String, val desc: String, private var items: List[Item], val exitNames: Array[String]) extends Actor {
     
     import Room._
     def receive = {
@@ -13,6 +13,7 @@ class Room(val name: String, val desc: String, private var items: List[Item], pr
         case GetItem(itemName) => sender ! Player.TakeItem(getItem(itemName))
         case DropItem(item) => dropItem(item)
         case m => println("Unhandled message in Room: " + m)
+        //case GetName => sender ! TakeName
     }
 
     private var exits: Array[Option[ActorRef]] = null

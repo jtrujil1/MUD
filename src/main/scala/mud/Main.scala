@@ -39,13 +39,16 @@ object Main {
 
 		printf("\nYou have chosen the %s\n", Room.rooms(playerRoom).name)
 
-		val player1 = new Player(Room.rooms(playerRoom), Nil, playerName)
+		val roomManager = system.actorOf(Props[RoomManager], "RoomManager")
+
+		val player1 = new Player(Nil, playerName)
+		roomManager ! RoomManager.AddPlayerToRoom(player1, playerRoom)
 
 		var command = ""
 		while (command.trim != "exit"){
 			println("Enter a command.")
 			command = readLine()
-			player1.processCommand(command)
+			playerName ! ProcessCommand(command)//player1.processCommand(command)
 		}
 	}
 }

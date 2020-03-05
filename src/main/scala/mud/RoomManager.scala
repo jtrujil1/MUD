@@ -6,8 +6,10 @@ import akka.actor.Props
 
 class RoomManager extends Actor {
 
+    import RoomManager._
     def receive = {
         case m => println("Unhandled message in RoomManager: " + m)
+        case AddPlayerToRoom(player, key) => player ! Player.TakeExit(rooms.get(key))
     }
 
     val rooms = readRooms()
@@ -26,4 +28,8 @@ class RoomManager extends Actor {
         val exits = (node \ "exits").text.split(",").map(_.toString)
         keyword -> context.actorOf(Props(new Room(name, desc, items, exits)), keyword)
     }
+}
+
+object RoomManager {
+    case class AddPlayerToRoom(player: ActorRef, keyword: String)
 }
