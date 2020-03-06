@@ -1,6 +1,8 @@
 package mud
 
 import scala.io.StdIn._
+import akka.actor.Props
+import akka.actor.ActorSystem
 /**
 This is a stub for the main class for your MUD.
 */
@@ -39,16 +41,19 @@ object Main {
 
 		printf("\nYou have chosen the %s\n", Room.rooms(playerRoom).name)
 
+		val system = ActorSystem("Main")
 		val roomManager = system.actorOf(Props[RoomManager], "RoomManager")
+		val playerManager = system.actorOf(Props[PlayerManager], "PlayerManager")
 
-		val player1 = new Player(Nil, playerName)
+		//val player1 = new Player(Nil, playerName)
+		playerManager ! PlayerManager.CreatePlayer(playerName)
 		roomManager ! RoomManager.AddPlayerToRoom(player1, playerRoom)
 
 		var command = ""
 		while (command.trim != "exit"){
 			println("Enter a command.")
 			command = readLine()
-			playerName ! ProcessCommand(command)//player1.processCommand(command)
+			playerName ! Player.ProcessCommand(command)//player1.processCommand(command)
 		}
 	}
 }

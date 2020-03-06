@@ -10,16 +10,22 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
     import Player._
     def receive = {
         case CheckInput =>
-        if(in.ready) {
-            val input = in.readLine()
-            processCommand(input)
-        }
+        // if(in.ready) {
+        //     val input = in.readLine()
+        //     processCommand(input)
+        // }
         case PrintMessage(msg) => println(msg)
-        case TakeItem(item) =>
-        if(item != None) addToInventory(item.get)
-        case TakeExit => 
-        case Move(command) => move(command)
+        case TakeItem(item) => if(item != None) self ! AddItem(item.get)
+            if(item != None) addToInventory(item.get)
+        case TakeExit(exit) =>
+            if(exit != None)
+                    position = exit.get
+                    self ! PrintMessage(s"You have moved to ${position.name}.")
+                    position ! Room.PrintDescription
+        case MoveRooms(command) => move(command)
         case ProcessCommand(command) => processCommand(command)
+        case GetFromInv(itemName) => self ! BackFromInv(getFromInventory(itemName))
+        case BackFromInv(item) => if(item != None) position ! Room.DropItem(item.get)
     }
 
     def processCommand(command: String): Unit = {
@@ -28,11 +34,13 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
             case "look" => position ! Room.PrintDescription //println(position.description())
             case "inventory" | "inv" => self ! PrintMessage(inventoryListing()) //println(inventoryListing())
             case "get" =>
-            val item = position ? Room.GetItem(commandArray(1)) //position.getItem(commandArray(1))
-            if(item != None) self ! AddItem(item.get) //addToInventory(item.get)
+            position ! Room.GetItem(commandArray(1))
+            //val item =  position.getItem(commandArray(1))
+            //addToInventory(item.get)
             case "drop" =>
-            val item2 = self ? GetFromInv(commandArray(1))//getFromInventory(commandArray(1))
-            if(item2 != None) position.dropItem(item2.get)
+            self ! GetFromInv(commandArray(1))
+            //val item2 = getFromInventory(commandArray(1))
+            //if(item2 != None) position.dropItem(item2.get)
             case "help" =>
             self ! PrintMessage("""All Commands:
             north, south, east, west, up, down - for movement (abbreviations also work)
@@ -43,12 +51,12 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
             exit - leave the game
             help - print the available commands and what they do""")
             case "exit" => self ! PrintMessage ("Thank you for playing.") //println("Thank you for playing.")
-            case "north" | "n" => self ! Move(command) //move(command)
-            case "south" | "s" => self ! Move(command) //move(command)
-            case "east" | "e" => self ! Move(command) //move(command)
-            case "west" | "w" => self ! Move(command) //move(command)
-            case "up" | "u" => self ! Move(command) //move(command)
-            case "down" | "d" => self ! Move(command) //move(command)
+            case "north" | "n" => self ! MoveRooms(command) //move(command)
+            case "south" | "s" => self ! MoveRooms(command) //move(command)
+            case "east" | "e" => self ! MoveRooms(command) //move(command)
+            case "west" | "w" => self ! MoveRooms(command) //move(command)
+            case "up" | "u" => self ! MoveRooms(command) //move(command)
+            case "down" | "d" => self ! MoveRooms(command) //move(command)
             case _ => self ! PrintMessage("Please enter a valid command. If you want to look at the available commands enter \"help\".") 
             //println("Please enter a valid command. If you want to look at the available commands enter \"help\".")
         }
@@ -58,17 +66,16 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
         inventory.find(_.name.toLowerCase == itemName.toLowerCase) match {
             case Some(item) =>
             inventory = inventory.patch(inventory.indexOf(item),Nil,1)
-            printf("\n%s dropped in the %s.\n", itemName, position.name)
+            self ! PrintMessage (s"\n${itemName} dropped in the ${position.name}.\n")
             Some(item)
             case None =>
-            println(s"There is no $itemName in your inventory.")
+            self ! PrintMessage (s"There is no $itemName in your inventory.")
             None
         }
 
     def addToInventory(item: Item): Unit = {
         inventory = item::inventory
-        println()
-        println(s"The item ${item.name} has been added to your inventory.")
+        self ! PrintMessage(s"\nThe item ${item.name} has been added to your inventory.")
     }
 
     def inventoryListing(): String = {
@@ -82,45 +89,50 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
     }
 
     def move(dir: String): Unit = {
-        var direction:Option[Room] = None
+        //var direction:Option[Room] = None
         dir match{
             case "north" | "n" =>
-            
-            direction = position.getExit(0)
-            if(direction != None)
-                position = direction.get
-                self ! PrintMessage(s"You have moved to ${position.name}.")
-                position ! Room.PrintDescription
+                position ! Room.GetExit(0)
+            // direction = position.getExit(0)
+            // if(direction != None)
+            //     position = direction.get
+            //     self ! PrintMessage(s"You have moved to ${position.name}.")
+            //     position ! Room.PrintDescription
             case "south" | "s" =>
-            direction = position.getExit(1)
-            if(direction != None)
-                position = direction.get
-                self ! PrintMessage(s"You have moved to ${position.name}.")
-                position ! Room.PrintDescription
+                position ! Room.GetExit(1)
+            // direction = position.getExit(1)
+            // if(direction != None)
+            //     position = direction.get
+            //     self ! PrintMessage(s"You have moved to ${position.name}.")
+            //     position ! Room.PrintDescription
             case "east" | "e" =>
-            direction = position.getExit(2)
-            if(direction != None)
-                position = direction.get
-                self ! PrintMessage(s"You have moved to ${position.name}.")
-                position ! Room.PrintDescription
+                position ! Room.GetExit(2)
+            // direction = position.getExit(2)
+            // if(direction != None)
+            //     position = direction.get
+            //     self ! PrintMessage(s"You have moved to ${position.name}.")
+            //     position ! Room.PrintDescription
             case "west" | "w" =>
-            direction = position.getExit(3)
-            if(direction != None)
-                position = direction.get
-                self ! PrintMessage(s"You have moved to ${position.name}.")
-                position ! Room.PrintDescription
+                position ! Room.GetExit(3)
+            // direction = position.getExit(3)
+            // if(direction != None)
+            //     position = direction.get
+            //     self ! PrintMessage(s"You have moved to ${position.name}.")
+            //     position ! Room.PrintDescription
             case "up" | "u" =>
-            direction = position.getExit(4)
-            if(direction != None)
-                position = direction.get
-                self ! PrintMessage(s"You have moved to ${position.name}.")
-                position ! Room.PrintDescription
+                position ! Room.GetExit(4)
+            // direction = position.getExit(4)
+            // if(direction != None)
+            //     position = direction.get
+            //     self ! PrintMessage(s"You have moved to ${position.name}.")
+            //     position ! Room.PrintDescription
             case "down" | "d" =>
-            direction = position.getExit(5)
-            if(direction != None)
-                position = direction.get
-                self ! PrintMessage(s"You have moved to ${position.name}.")
-                position ! Room.PrintDescription
+                position ! Room.GetExit(5)
+            // direction = position.getExit(5)
+            // if(direction != None)
+            //     position = direction.get
+            //     self ! PrintMessage(s"You have moved to ${position.name}.")
+            //     position ! Room.PrintDescription
                 
         }
     }
@@ -131,11 +143,9 @@ object Player {
     case class PrintMessage(msg: String)
     case class TakeExit(exit: Option[ActorRef])
     case class TakeItem(item: Option[Item])
-    case class Move(command:String)
     case class ProcessCommand(command: String)
-
     case class MoveRooms(dir: String)
-    case class PrintInventory()
     case class AddItem(item: Item)
     case class GetFromInv(itemName: String)
+    case class BackFromInv(item: Option[Item])
 }

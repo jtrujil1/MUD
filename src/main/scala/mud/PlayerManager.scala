@@ -9,11 +9,11 @@ class PlayerManager extends Actor {
     import PlayerManager._
     def receive = {
         case m => println("Unhandled message in PlayerManager: " + m)
-        case CreatePlayer(player, playerName) => context.actorOf(Props(player, playerName))
+        case CreatePlayer(playerName) => context.actorOf(Props(new Player(nil, playerName), playerName))
     }
 }
 
 object PlayerManager{
-    case class CreatePlayer(player: ActorRef, playerName: String)
+    case class CreatePlayer(playerName: String)
 }
 //printStream,bufferedReader
