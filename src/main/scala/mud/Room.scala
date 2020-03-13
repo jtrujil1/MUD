@@ -11,9 +11,9 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
         case PrintDescription => sender ! Player.PrintMessage(description())
         case GetExit(dir) => sender ! Player.TakeExit(getExit(dir))
         case GetItem(itemName) => sender ! Player.TakeItem(getItem(itemName))
+        case GetRoomName => sender ! Player.TakeRoomName(name)
         case DropItem(item) => dropItem(item)
         case m => println("Unhandled message in Room: " + m)
-        //case GetName => sender ! TakeName
     }
 
     private var exits: Array[Option[ActorRef]] = null
@@ -76,4 +76,5 @@ object Room {
     case class GetExit(dir: Int)
     case class GetItem(itemName: String)
     case class DropItem(item: Item)
+    case object GetRoomName
 }

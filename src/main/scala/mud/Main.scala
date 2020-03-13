@@ -26,7 +26,6 @@ object Main {
 			}
 		}
 
-		//println("Enter the password for your player.")
 		var playerRoom:String = "-1"
 		while(playerRoom == "-1"){
 			println("Select the world you want to enter.")
@@ -39,14 +38,14 @@ object Main {
 			}
 		}
 
-		printf("\nYou have chosen the %s\n", Room.rooms(playerRoom).name)
+		//printf("\nYou have chosen the %s\n", Room.rooms(playerRoom).name)
 
 		val system = ActorSystem("Main")
 		val roomManager = system.actorOf(Props[RoomManager], "RoomManager")
 		val playerManager = system.actorOf(Props[PlayerManager], "PlayerManager")
 
-		//val player1 = new Player(Nil, playerName)
-		playerManager ! PlayerManager.CreatePlayer(playerName)
+		val player1 = new Player(Nil, playerName)
+		playerManager ! PlayerManager.CreatePlayer(player1, playerName)
 		roomManager ! RoomManager.AddPlayerToRoom(player1, playerRoom)
 
 		var command = ""

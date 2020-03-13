@@ -3,29 +3,39 @@ package mud
 import scala.languageFeature.existentials
 import akka.actor.Actor
 import akka.actor.ActorRef
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class Player(private var inventory: List[Item], val name: String = "Player 1") extends Actor {
     private var position: ActorRef = null
+    private var roomName: String = ""
 
     import Player._
     def receive = {
-        case CheckInput =>
+        //case CheckInput =>
         // if(in.ready) {
         //     val input = in.readLine()
         //     processCommand(input)
         // }
         case PrintMessage(msg) => println(msg)
-        case TakeItem(item) => if(item != None) self ! AddItem(item.get)
-            if(item != None) addToInventory(item.get)
+        case TakeItem(item) => if(item != None) addToInventory(item.get)
         case TakeExit(exit) =>
-            if(exit != None)
-                    position = exit.get
-                    self ! PrintMessage(s"You have moved to ${position.name}.")
-                    position ! Room.PrintDescription
+            if(exit != None){
+                position = exit.get
+                val f1 = Future {
+                    position ! Room.GetRoomName
+                    roomName
+                }
+                self ! PrintMessage(s"You have moved to ${Await.result(f1, 5 seconds)}.")
+                position ! Room.PrintDescription
+            }
         case MoveRooms(command) => move(command)
         case ProcessCommand(command) => processCommand(command)
         case GetFromInv(itemName) => self ! BackFromInv(getFromInventory(itemName))
         case BackFromInv(item) => if(item != None) position ! Room.DropItem(item.get)
+        case TakeRoomName(name) => roomName = name
     }
 
     def processCommand(command: String): Unit = {
@@ -34,22 +44,22 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
             case "look" => position ! Room.PrintDescription //println(position.description())
             case "inventory" | "inv" => self ! PrintMessage(inventoryListing()) //println(inventoryListing())
             case "get" =>
-            position ! Room.GetItem(commandArray(1))
-            //val item =  position.getItem(commandArray(1))
-            //addToInventory(item.get)
+                position ! Room.GetItem(commandArray(1))
+                //val item =  position.getItem(commandArray(1))
+                //addToInventory(item.get)
             case "drop" =>
-            self ! GetFromInv(commandArray(1))
-            //val item2 = getFromInventory(commandArray(1))
-            //if(item2 != None) position.dropItem(item2.get)
+                self ! GetFromInv(commandArray(1))
+                //val item2 = getFromInventory(commandArray(1))
+                //if(item2 != None) position.dropItem(item2.get)
             case "help" =>
-            self ! PrintMessage("""All Commands:
-            north, south, east, west, up, down - for movement (abbreviations also work)
-            look - reprints the description of the current room
-            inv/inventory - list the contents of your inventory
-            get item - to get an item from the room and add it to your inventory
-            drop item - to drop an item from your inventory into the room
-            exit - leave the game
-            help - print the available commands and what they do""")
+                self ! PrintMessage("""All Commands:
+                north, south, east, west, up, down - for movement (abbreviations also work)
+                look - reprints the description of the current room
+                inv/inventory - list the contents of your inventory
+                get item - to get an item from the room and add it to your inventory
+                drop item - to drop an item from your inventory into the room
+                exit - leave the game
+                help - print the available commands and what they do""")
             case "exit" => self ! PrintMessage ("Thank you for playing.") //println("Thank you for playing.")
             case "north" | "n" => self ! MoveRooms(command) //move(command)
             case "south" | "s" => self ! MoveRooms(command) //move(command)
@@ -66,7 +76,11 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
         inventory.find(_.name.toLowerCase == itemName.toLowerCase) match {
             case Some(item) =>
             inventory = inventory.patch(inventory.indexOf(item),Nil,1)
-            self ! PrintMessage (s"\n${itemName} dropped in the ${position.name}.\n")
+            val f2 = Future {
+                    position ! Room.GetRoomName
+                    roomName
+            }
+            self ! PrintMessage (s"\n$itemName dropped in the ${Await.result(f2, 5 seconds)}.\n")
             Some(item)
             case None =>
             self ! PrintMessage (s"There is no $itemName in your inventory.")
@@ -139,7 +153,7 @@ class Player(private var inventory: List[Item], val name: String = "Player 1") e
 }
 
 object Player {
-    case class CheckInput(input: String)
+    //case class CheckInput(input: String)
     case class PrintMessage(msg: String)
     case class TakeExit(exit: Option[ActorRef])
     case class TakeItem(item: Option[Item])
@@ -148,4 +162,5 @@ object Player {
     case class AddItem(item: Item)
     case class GetFromInv(itemName: String)
     case class BackFromInv(item: Option[Item])
+    case class TakeRoomName(name: String)
 }
