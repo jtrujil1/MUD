@@ -23,26 +23,16 @@ class Player(val name: String, val in: BufferedReader, val out: PrintStream, pri
         case PrintMessage(msg) => println(msg)
         case TakeItem(item) =>
             if(item != None) addToInventory(item.get)
-            else self ! PrintMessage("That item is not in the room.")
+            else println("That item is not in the room.")
         case TakeExit(exit) =>
             if(exit != None){
                 position = exit.get
                 position ! Room.GetRoomName
             }else{
-                self ! PrintMessage("There is no exit that way.")
-            }
-        case MoveRooms(command) => move(command)
-        case ProcessCommand(command) => processCommand(command)
-        case GetFromInv(itemName) => self ! BackFromInv(getFromInventory(itemName))
-        case BackFromInv(item) =>
-            if(item != None){
-                position ! Room.DropItem(item.get)
-                self ! PrintMessage(s"You have dropped the ${item.get.name} in the ${position.path.name}.")
-            }else{
-                self ! PrintMessage("That item is not in your inventory.")
+                println("There is no exit that way.")
             }
         case TakeRoomName(name) =>
-            self ! PrintMessage(s"You have moved to the $name.")
+            println(s"You have moved to the $name.")
             position ! Room.PrintDescription
     }
 
@@ -50,13 +40,19 @@ class Player(val name: String, val in: BufferedReader, val out: PrintStream, pri
         val commandArray = command.split(" +", 2)
         commandArray(0).toLowerCase match{
             case "look" => position ! Room.PrintDescription
-            case "inventory" | "inv" => self ! PrintMessage(inventoryListing())
+            case "inventory" | "inv" => println(inventoryListing())
             case "get" =>
                 position ! Room.GetItem(commandArray(1))
             case "drop" =>
-                self ! GetFromInv(commandArray(1))
+                val item = getFromInventory(commandArray(1))
+                if(item != None){
+                    position ! Room.DropItem(item.get)
+                    println(s"You have dropped the ${item.get.name} in the ${position.path.name}.")
+                }else{
+                    println("That item is not in your inventory.")
+            }
             case "help" =>
-                self ! PrintMessage("""All Commands:
+                println("""All Commands:
                 north, south, east, west, up, down - for movement (abbreviations also work)
                 look - reprints the description of the current room
                 inv/inventory - list the contents of your inventory
@@ -65,15 +61,15 @@ class Player(val name: String, val in: BufferedReader, val out: PrintStream, pri
                 exit - leave the game
                 help - print the available commands and what they do""")
             case "exit" =>
-                self ! PrintMessage ("Thank you for playing.")
+                println("Thank you for playing.")
                 context.system.terminate()
-            case "north" | "n" => self ! MoveRooms(command)
-            case "south" | "s" => self ! MoveRooms(command)
-            case "east" | "e" => self ! MoveRooms(command)
-            case "west" | "w" => self ! MoveRooms(command)
-            case "up" | "u" => self ! MoveRooms(command)
-            case "down" | "d" => self ! MoveRooms(command)
-            case _ => self ! PrintMessage("Please enter a valid command. If you want to look at the available commands enter \"help\".") 
+            case "north" | "n" => move(command)
+            case "south" | "s" => move(command)
+            case "east" | "e" => move(command)
+            case "west" | "w" => move(command)
+            case "up" | "u" => move(command)
+            case "down" | "d" => move(command)
+            case _ => println("Please enter a valid command. If you want to look at the available commands enter \"help\".") 
         }
     }
     
@@ -89,7 +85,7 @@ class Player(val name: String, val in: BufferedReader, val out: PrintStream, pri
 
     def addToInventory(item: Item): Unit = {
         inventory = item::inventory
-        self ! PrintMessage(s"\nThe item ${item.name} has been added to your inventory.")
+        println(s"\nThe item ${item.name} has been added to your inventory.")
     }
 
     def inventoryListing(): String = {
@@ -126,9 +122,5 @@ object Player {
     case class TakeExit(exit: Option[ActorRef])
     case class TakeItem(item: Option[Item])
     case class ProcessCommand(command: String)
-    case class MoveRooms(dir: String)
-    case class AddItem(item: Item)
-    case class GetFromInv(itemName: String)
-    case class BackFromInv(item: Option[Item])
     case class TakeRoomName(name: String)
 }
