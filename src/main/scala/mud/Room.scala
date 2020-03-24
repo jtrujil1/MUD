@@ -20,7 +20,7 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
 
     def description(): String = {
         var descStr: String = ""
-        descStr += s"$name\n$desc\nExits: "
+        descStr += s"$desc\nExits: "
         var counter = 0
         for (i <- 0 to 5) {
             if (exitNames(i) != "-1") {
@@ -48,13 +48,6 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
     }
 
     def getExit(dir: Int): Option[ActorRef] = {
-        // if (exits(dir) != "-1") {
-        //     println("You have moved to " + Room.rooms(exits(dir)).name + ".")
-        //     Some(Room.rooms(exits(dir)))
-        // } else {
-        //     println("There is no exit that way, you can use look to see your available exits.")
-        //     None
-        // }
         exits(dir)
     }
 
