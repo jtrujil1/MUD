@@ -8,7 +8,9 @@ class RoomManager extends Actor {
 
     import RoomManager._
     def receive = {
-        case AddPlayerToRoom(player, key) => player ! Player.TakeExit(rooms.get(key))
+        case AddPlayerToRoom(player, key) =>
+            val room:ActorRef = rooms.get(key).get
+            player ! Player.AddPlayerToFirstRoom(room)
         case m => println("Unhandled message in RoomManager: " + m)
     }
 
