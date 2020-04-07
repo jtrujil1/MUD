@@ -11,7 +11,12 @@ import java.io.BufferedReader
 import java.io.PrintStream
 import java.net.Socket
 
-class Player(val name: String, val sock: Socket, val in: BufferedReader, val out: PrintStream, private var inventory: List[Item]) extends Actor {
+class Player(val name: String, 
+            val sock: Socket, 
+            val in: BufferedReader, 
+            val out: PrintStream, 
+            private var inventory: List[Item]) extends Actor {
+
     private var position: ActorRef = null
 
     import Player._

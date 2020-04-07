@@ -5,7 +5,7 @@ import akka.actor.ActorRef
 
 class Room(val name: String, val desc: String, private var items: List[Item], val exitNames: Array[String]) extends Actor {
 
-    private var playersInRoom: Seq[ActorRef] = Seq()
+    private var playersInRoom= new mud.MutableDLList[ActorRef]()
     
     import Room._
     def receive = {
@@ -14,13 +14,13 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
         case GetExit(dir) =>
             val exit = getExit(dir)
             sender ! Player.TakeExit(exit)
-            if(exit != None) playersInRoom +:= sender()
+            if(exit != None) playersInRoom += sender()
         case GetItem(itemName) => sender ! Player.TakeItem(getItem(itemName))
         case DropItem(item) => dropItem(item)
         case SayMessage(playerName, msg) => playersInRoom.foreach(_ ! Player.PrintMessage(s"$playerName: $msg"))
         case AddPlayer => 
             playersInRoom.foreach(_ ! Player.PrintMessage(s"${sender.path.name} has entered the room."))
-            playersInRoom +:= sender
+            playersInRoom += sender
             sender ! Player.PrintMessage(s"You have moved to the $name.\n" + description())
         case RemovePlayer => 
             playersInRoom = playersInRoom.filter(_ != sender())
