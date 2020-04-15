@@ -17,16 +17,16 @@ class PlayerManager extends Actor {
     def receive = {
         case CreatePlayer(playerName, playerRoom, sock, in, out) => 
             val newPlayer = context.actorOf(Props(new Player(playerName, sock, in, out, List())), playerName)
-            players += (playerName -> newPlayer)
+            players += (playerName.toLowerCase -> newPlayer)
             Main.roomManager ! RoomManager.AddPlayerToRoom(newPlayer, playerRoom)
         case CheckAllInputs =>
             for (child <- context.children) child ! Player.CheckInput
         case TellPlayer(playerName, receiverName, message) =>
-            try{
-            val receiver = players(receiverName)
-            receiver ! Player.PrintMessage(s"$playerName to $receiverName: $message")
-            }catch{
-                case e: ju.NoSuchElementException => sender ! Player.PrintMessage(s"$receiverName is not in the game.")
+            if(players.contains(receiverName.toLowerCase())){
+                val receiver = players(receiverName.toLowerCase())
+                receiver ! Player.PrintMessage(s"$playerName to $receiverName: $message")
+            }else{
+                Main.npcManager ! NPCManager.TellPlayer(sender, receiverName, message)
             }
         case m => println("Unhandled message in PlayerManager: " + m)
     }

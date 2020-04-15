@@ -29,14 +29,14 @@ class Player(val name: String,
         case PrintMessage(msg) => out.println(msg)
         case TakeItem(item) =>
             if(item != None) addToInventory(item.get)
-            else out.println("That item is not in the room.")
+            else out.println("\nThat item is not in the room.\n")
         case TakeExit(exit) =>
             if(exit != None){
                 position ! Room.RemovePlayer
                 position = exit.get
                 position ! Room.AddPlayer
             }else{
-                out.println("There is no exit that way.")
+                out.println("\nThere is no exit that way.\n")
             }
         case AddPlayerToFirstRoom(room) =>
             position = room
@@ -54,9 +54,9 @@ class Player(val name: String,
                 val item = getFromInventory(commandArray(1))
                 if(item != None){
                     position ! Room.DropItem(item.get)
-                    out.println(s"You have dropped the ${item.get.name} in the ${position.path.name}.")
+                    out.println(s"\nYou have dropped the ${item.get.name} in the ${position.path.name}.\n")
                 }else{
-                    out.println("That item is not in your inventory.")
+                    out.println("\nThat item is not in your inventory.\n")
             }
             case "help" =>
                 out.println("""All Commands:
@@ -71,7 +71,7 @@ class Player(val name: String,
                 help - print the available commands and what they do""")
             case "exit" =>
                 position ! Room.RemovePlayer
-                out.println("Thank you for playing.")
+                out.println("\nThank you for playing.\n")
                 context.system.terminate()
             case "north" | "n" => move(command)
             case "south" | "s" => move(command)
@@ -86,7 +86,7 @@ class Player(val name: String,
                 val receiver = commandArray(1).split(" +", 2)(0)
                 val msg = commandArray(1).split(" +", 2)(1)
                 Main.playerManager ! PlayerManager.TellPlayer(name, receiver, msg)
-            case _ => out.println("Please enter a valid command. If you want to look at the available commands enter \"help\".") 
+            case _ => out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
         }
     }
     
@@ -102,17 +102,17 @@ class Player(val name: String,
 
     def addToInventory(item: Item): Unit = {
         inventory = item::inventory
-        out.println(s"\nThe item ${item.name} has been added to your inventory.")
+        out.println(s"\nThe item ${item.name} has been added to your inventory.\n")
     }
 
     def inventoryListing(): String = {
         var invString:String = ""
-        invString += "Inventory:\n"
+        invString += "\nInventory:\n"
         for(i <- 0 until inventory.length){
                 invString += ("     " + inventory(i).name + " - " + inventory(i).desc.trim + "\n")
         }
         if(inventory.length == 0) invString += "No items in inventory."
-        return invString
+        return invString + "\n"
     }
 
     def move(dir: String): Unit = {

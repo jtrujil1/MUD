@@ -6,6 +6,7 @@ import akka.actor.ActorRef
 class Room(val name: String, val desc: String, private var items: List[Item], val exitNames: Array[String]) extends Actor {
 
     private var playersInRoom= new mud.MutableDLList[ActorRef]()
+    private var npcsInRoom= new mud.MutableDLList[ActorRef]()
     
     import Room._
     def receive = {
@@ -17,14 +18,25 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
             if(exit != None) playersInRoom += sender()
         case GetItem(itemName) => sender ! Player.TakeItem(getItem(itemName))
         case DropItem(item) => dropItem(item)
-        case SayMessage(playerName, msg) => playersInRoom.foreach(_ ! Player.PrintMessage(s"$playerName: $msg"))
+        case SayMessage(playerName, msg) => playersInRoom.foreach(_ ! Player.PrintMessage(s"\n$playerName: $msg\n"))
         case AddPlayer => 
-            playersInRoom.foreach(_ ! Player.PrintMessage(s"${sender.path.name} has entered the room."))
+            playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has entered the room.\n"))
             playersInRoom += sender
-            sender ! Player.PrintMessage(s"You have moved to the $name.\n" + description())
+            sender ! Player.PrintMessage(s"\nYou have moved to the $name.\n" + description())
+        case AddNPC =>
+            playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has entered the room.\n"))
+            npcsInRoom += sender
         case RemovePlayer => 
             playersInRoom = playersInRoom.filter(_ != sender())
-            playersInRoom.foreach(_ ! Player.PrintMessage(s"${sender.path.name} has left the room."))
+            playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has left the room.\n"))
+        case RemoveNPC => 
+            npcsInRoom = npcsInRoom.filter(_ != sender())
+            playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has left the room.\n"))
+        case GetNPCExit(dir) => 
+            val exit = getExit(dir)
+            sender ! NPC.TakeExit(exit)
+            if(exit != None) npcsInRoom += sender()
+        case NPCDroppedItem(npcName, player) => player ! Player.PrintMessage(s"\n$npcName has dropped an item in the $name.\n")
         case m => println("Unhandled message in Room: " + m)
     }
 
@@ -32,7 +44,7 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
 
     def description(): String = {
         var descStr: String = ""
-        descStr += s"$desc\nExits: "
+        descStr += s"\n$desc\nExits: "
         var counter = 0
         for (i <- 0 to 5) {
             if (exitNames(i) != "-1") {
@@ -61,7 +73,12 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
             descStr += playersInRoom(i).path.name
             if (i < playersInRoom.length - 1) descStr += ", "
         }
-        descStr
+        if(!npcsInRoom.isEmpty) descStr += ", "
+        for (i <- 0 until npcsInRoom.length) {
+            descStr += npcsInRoom(i).path.name
+            if (i < npcsInRoom.length - 1) descStr += ", "
+        }
+        descStr + "\n"
     }
 
     def getExit(dir: Int): Option[ActorRef] = {
@@ -89,4 +106,8 @@ object Room {
     case class SayMessage(playerName: String, msg: String)
     case object AddPlayer
     case object RemovePlayer
+    case class GetNPCExit(dir: Int)
+    case object AddNPC
+    case object RemoveNPC
+    case class NPCDroppedItem(npcName: String, player: ActorRef)
 }

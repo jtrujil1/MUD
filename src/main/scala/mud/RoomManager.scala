@@ -11,6 +11,9 @@ class RoomManager extends Actor {
         case AddPlayerToRoom(player, key) =>
             val room:ActorRef = rooms.get(key).get
             player ! Player.AddPlayerToFirstRoom(room)
+        case AddNPCToRoom(npc, key) =>
+            val room:ActorRef = rooms.get(key).get
+            npc ! NPC.AddNPCToFirstRoom(room)
         case m => println("Unhandled message in RoomManager: " + m)
     }
 
@@ -34,4 +37,5 @@ class RoomManager extends Actor {
 
 object RoomManager {
     case class AddPlayerToRoom(player: ActorRef, keyword: String)
+    case class AddNPCToRoom(npc: ActorRef, keyword: String)
 }
