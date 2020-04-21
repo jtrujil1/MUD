@@ -6,12 +6,11 @@ import akka.actor.Props
 import java.io.BufferedReader
 import java.io.PrintStream
 import java.net.Socket
-import scala.collection.mutable
 import java.{util => ju}
 
 class PlayerManager extends Actor {
 
-    val players = mutable.Map[String, ActorRef]()
+    private var players = Map[String, ActorRef]()
 
     import PlayerManager._
     def receive = {
@@ -28,6 +27,7 @@ class PlayerManager extends Actor {
             }else{
                 Main.npcManager ! NPCManager.TellPlayer(sender, receiverName, message)
             }
+        case RemovePlayer => players = players-sender.path.name.toLowerCase
         case m => println("Unhandled message in PlayerManager: " + m)
     }
 }
@@ -36,4 +36,5 @@ object PlayerManager{
     case class CreatePlayer(playerName: String, playerRoom: String, sock: Socket, in:BufferedReader, out: PrintStream)
     case object CheckAllInputs
     case class TellPlayer(playerName: String, receiverName: String, message: String)
+    case object RemovePlayer
 }

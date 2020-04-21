@@ -1,3 +1,3 @@
 package mud
 
-case class Item(name: String, desc: String)
+case class Item(name: String, damage: Int, speed: Int, desc: String)

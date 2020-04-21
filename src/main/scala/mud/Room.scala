@@ -23,20 +23,16 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
             playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has entered the room.\n"))
             playersInRoom += sender
             sender ! Player.PrintMessage(s"\nYou have moved to the $name.\n" + description())
-        case AddNPC =>
-            playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has entered the room.\n"))
-            npcsInRoom += sender
         case RemovePlayer => 
             playersInRoom = playersInRoom.filter(_ != sender())
             playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has left the room.\n"))
-        case RemoveNPC => 
-            npcsInRoom = npcsInRoom.filter(_ != sender())
-            playersInRoom.foreach(_ ! Player.PrintMessage(s"\n${sender.path.name} has left the room.\n"))
-        case GetNPCExit(dir) => 
-            val exit = getExit(dir)
-            sender ! NPC.TakeExit(exit)
-            if(exit != None) npcsInRoom += sender()
-        case NPCDroppedItem(npcName, player) => player ! Player.PrintMessage(s"\n$npcName has dropped an item in the $name.\n")
+
+        case PlayerDroppedItem(npcName, player) => player ! Player.PrintMessage(s"\n$npcName has dropped an item in the $name.\n")
+        case GetPlayer(fighter) =>
+            playersInRoom.find(_.path.name.toLowerCase == fighter.toLowerCase) match{
+                case Some(player) => sender ! Player.FoundPlayer(Some(player))
+                case None => sender ! Player.FoundPlayer(None)
+            }
         case m => println("Unhandled message in Room: " + m)
     }
 
@@ -106,8 +102,6 @@ object Room {
     case class SayMessage(playerName: String, msg: String)
     case object AddPlayer
     case object RemovePlayer
-    case class GetNPCExit(dir: Int)
-    case object AddNPC
-    case object RemoveNPC
-    case class NPCDroppedItem(npcName: String, player: ActorRef)
+    case class PlayerDroppedItem(npcName: String, player: ActorRef)
+    case class GetPlayer(fighter: String)
 }

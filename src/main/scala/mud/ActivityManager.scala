@@ -23,7 +23,6 @@ class ActivityManager extends Actor {
 
 object ActivityManager {
     case class Event(time: Int, recipient: ActorRef, msg: Any)
-
     case object CheckQueue
     case class ScheduleEvent(delay: Int, recipient: ActorRef, msg: Any)
 }

@@ -11,9 +11,9 @@ class RoomManager extends Actor {
         case AddPlayerToRoom(player, key) =>
             val room:ActorRef = rooms.get(key).get
             player ! Player.AddPlayerToFirstRoom(room)
-        case AddNPCToRoom(npc, key) =>
-            val room:ActorRef = rooms.get(key).get
-            npc ! NPC.AddNPCToFirstRoom(room)
+        // case AddNPCToRoom(npc, key) =>
+        //     val room:ActorRef = rooms.get(key).get
+        //     npc ! NPC.AddNPCToFirstRoom(room)
         case m => println("Unhandled message in RoomManager: " + m)
     }
 
@@ -29,7 +29,7 @@ class RoomManager extends Actor {
         val name = (node \ "@name").text
         val keyword = (node \ "@keyword").text
         val desc = (node \ "desc").text
-        val items = (node \ "item").map(n => (Item((n \ "@name").text, n.text))).toList
+        val items = (node \ "item").map(n => (Item((n \ "@name").text, (n \ "@damage").text.toInt, (n \ "@speed").text.toInt, n.text))).toList
         val exits = (node \ "exits").text.split(",").map(_.toString)
         keyword -> context.actorOf(Props(new Room(name, desc, items, exits)), keyword)
     }
@@ -37,5 +37,5 @@ class RoomManager extends Actor {
 
 object RoomManager {
     case class AddPlayerToRoom(player: ActorRef, keyword: String)
-    case class AddNPCToRoom(npc: ActorRef, keyword: String)
+    // case class AddNPCToRoom(npc: ActorRef, keyword: String)
 }

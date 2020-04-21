@@ -23,7 +23,7 @@ object Main extends App {
 	val npcManager = system.actorOf(Props[NPCManager], "NPCManager")
 	val activityManager = system.actorOf(Props[ActivityManager], "ActivityManager")
 	system.scheduler.schedule(1.seconds, 0.1.seconds, playerManager, PlayerManager.CheckAllInputs)
-	for(i <- 1 to 6) system.scheduler.scheduleOnce(0.seconds)(npcManager ! NPCManager.CreateNPC)
+	for(i <- 1 to 7) system.scheduler.scheduleOnce(0.seconds)(npcManager ! NPCManager.CreateNPC)
 	system.scheduler.schedule(1.seconds,0.1.seconds, activityManager, ActivityManager.CheckQueue)
 	
 	val port = 8000

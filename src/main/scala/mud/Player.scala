@@ -17,7 +17,11 @@ class Player(val name: String,
             val out: PrintStream, 
             private var inventory: List[Item]) extends Actor {
 
+    val defaultWeapon:Item = new Item("fists", 45, 24, "last resort in a fight")
     private var position: ActorRef = null
+    private var health: Int = 300
+    private var currentWeapon: Item = defaultWeapon
+    private var victim: Option[ActorRef] = None
 
     import Player._
     def receive = {
@@ -35,13 +39,64 @@ class Player(val name: String,
                 position ! Room.RemovePlayer
                 position = exit.get
                 position ! Room.AddPlayer
+                if(victim != None){
+                    victim.get ! Player.StopCombat
+                    victim = None
+                }
             }else{
                 out.println("\nThere is no exit that way.\n")
             }
         case AddPlayerToFirstRoom(room) =>
             position = room
             position ! Room.AddPlayer
+        case GetHit(damage, room) =>
+            if(room == position){
+                health -= damage
+                if(health > 0){
+                    out.println(s"\nYou've been hit. You're health is now at $health.\n")
+                    sender ! Player.HitResult(true, false)
+                    if(victim == None || victim == Some(sender)){
+                        victim = Some(sender)
+                        var delay = 40 - currentWeapon.speed
+                        Main.activityManager ! ActivityManager.ScheduleEvent(delay, self, Player.HitPlayer(victim.get))
+                    }
+                }else{
+                    out.println("\nYou've been killed. Game over.\n")
+                    sender ! Player.HitResult(true, true)
+                    Main.playerManager ! PlayerManager.RemovePlayer
+                    position ! Room.RemovePlayer
+                    if(currentWeapon != defaultWeapon) inventory = currentWeapon::inventory
+                    if(inventory.length > 0){
+                        inventory.foreach(item => position ! Room.DropItem(item))
+                        position ! Room.PlayerDroppedItem(name, sender)
+                    }
+                    sock.close()
+                    context.stop(self)
+                }
+            }else sender ! Player.HitResult(false, false)
+            
+        case FoundPlayer(fighter) =>
+            if(fighter != None){
+                victim = fighter
+                var delay = 40 - currentWeapon.speed
+                Main.activityManager ! ActivityManager.ScheduleEvent(delay, self, Player.HitPlayer(victim.get))
+            }else out.println("\nThat player is not in the current room.\n")
+        case HitPlayer(victim) => victim ! Player.GetHit(currentWeapon.damage, position)
+        case HitResult(result, dead) =>
+            if(result){
+                out.println(s"\nYou've hit ${sender.path.name}.\n")
+            }else{
+                out.println("\nYou've missed,the player is not in the room anymore.\n")
+                victim = None
+            }
+            if(dead){
+                out.println(s"\n${sender.path.name} is now dead.\n")
+                victim = None
+            }
+        case StopCombat => victim = None
+        case m => println("Unhandled message in Player: "+ m)
     }
+
 
     def processCommand(command: String): Unit = {
         val commandArray = command.split(" +", 2)
@@ -49,9 +104,9 @@ class Player(val name: String,
             case "look" => position ! Room.PrintDescription
             case "inventory" | "inv" => out.println(inventoryListing())
             case "get" =>
-                position ! Room.GetItem(commandArray(1))
+                position ! Room.GetItem(commandArray(1).trim)
             case "drop" =>
-                val item = getFromInventory(commandArray(1))
+                val item = getFromInventory(commandArray(1).trim)
                 if(item != None){
                     position ! Room.DropItem(item.get)
                     out.println(s"\nYou have dropped the ${item.get.name} in the ${position.path.name}.\n")
@@ -66,19 +121,23 @@ class Player(val name: String,
                 get item - to get an item from the room and add it to your inventory
                 drop item - to drop an item from your inventory into the room
                 say message - to communicate with everyone in your current room
-                tell user message - to communicate with a user anywhere in the MUD
+                tell player message - to communicate with a user anywhere in the MUD
+                equip/unequip - to pick which weapon in your inventory you are currently using
+                kill player - to initiate combat
+                flee/run away - to flee combat 
                 exit - leave the game
                 help - print the available commands and what they do""")
             case "exit" =>
                 position ! Room.RemovePlayer
                 out.println("\nThank you for playing.\n")
-                context.system.terminate()
-            case "north" | "n" => move(command)
-            case "south" | "s" => move(command)
-            case "east" | "e" => move(command)
-            case "west" | "w" => move(command)
-            case "up" | "u" => move(command)
-            case "down" | "d" => move(command)
+                sock.close()
+                context.stop(self)
+            case "north" | "n" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
+            case "south" | "s" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
+            case "east" | "e" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
+            case "west" | "w" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
+            case "up" | "u" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
+            case "down" | "d" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
             case "say" => 
                 val msg = commandArray(1)
                 position ! Room.SayMessage(name, msg)
@@ -86,6 +145,30 @@ class Player(val name: String,
                 val receiver = commandArray(1).split(" +", 2)(0)
                 val msg = commandArray(1).split(" +", 2)(1)
                 Main.playerManager ! PlayerManager.TellPlayer(name, receiver, msg)
+            case "equip" => 
+                val weapon = getFromInventory(commandArray(1).trim)
+                if(weapon != None){
+                    if(currentWeapon != defaultWeapon){
+                        addToInventory(currentWeapon)
+                    }
+                    currentWeapon = weapon.get
+                    out.println(s"\nYou are now using ${currentWeapon.name}.\n")
+                } else out.println("\nThat item is not in your inventory.\n")
+            case "unequip" =>
+                if(commandArray.length > 1){
+                    val weapon = commandArray(1).trim
+                    if(weapon == currentWeapon.name){
+                        addToInventory(currentWeapon)
+                        currentWeapon = defaultWeapon
+                    } else out.println("\nYou are not currently using that weapon.\n")
+                }else if(currentWeapon != defaultWeapon){
+                    addToInventory(currentWeapon)
+                    currentWeapon = defaultWeapon
+                }
+            case "kill" => 
+                val fighter = commandArray(1).trim
+                position ! Room.GetPlayer(fighter)
+            case "flee" | "run" => position ! Room.GetExit(util.Random.nextInt(6))
             case _ => out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
         }
     }
@@ -140,4 +223,9 @@ object Player {
     case class TakeItem(item: Option[Item])
     case class ProcessCommand(command: String)
     case class AddPlayerToFirstRoom(room: ActorRef)
+    case class GetHit(damage: Int, room: ActorRef)
+    case class HitPlayer(victim: ActorRef)
+    case class FoundPlayer(victim: Option[ActorRef])
+    case class HitResult(result: Boolean, dead: Boolean)
+    case object StopCombat
 }
