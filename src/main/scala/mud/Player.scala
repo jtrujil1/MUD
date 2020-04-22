@@ -93,7 +93,9 @@ class Player(val name: String,
                 out.println(s"\n${sender.path.name} is now dead.\n")
                 victim = None
             }
-        case StopCombat => victim = None
+        case StopCombat =>
+            victim = None
+            out.println("\nPlayer has run away, combat has ended.\n")
         case m => println("Unhandled message in Player: "+ m)
     }
 

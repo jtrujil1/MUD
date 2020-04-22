@@ -31,12 +31,12 @@ class NPC(val name: String, private var inventory: List[Item]) extends Actor {
                     victim.get ! Player.StopCombat
                     victim = None
                 }
-                Main.activityManager ! ActivityManager.ScheduleEvent(util.Random.nextInt(30)+250, self, NPC.AskForExit)
+                Main.activityManager ! ActivityManager.ScheduleEvent(util.Random.nextInt(290)+200, self, NPC.AskForExit)
             }else position ! Room.GetExit(util.Random.nextInt(6))
         case AddPlayerToFirstRoom(room) =>
             position = room
             position ! Room.AddPlayer
-            Main.activityManager ! ActivityManager.ScheduleEvent(util.Random.nextInt(30)+250, self, NPC.AskForExit)
+            Main.activityManager ! ActivityManager.ScheduleEvent(util.Random.nextInt(290)+200, self, NPC.AskForExit)
         case AskForExit => if (victim == None) position ! Room.GetExit(util.Random.nextInt(6))
         case GetMessage(player, message) =>
             var droppedItem = false
