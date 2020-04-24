@@ -203,6 +203,7 @@ class Player(val name: String,
                     position ! Room.GetPlayer(fighter)
                 }else out.println("\nYou cannot do this during combat.\n")
             case "flee" | "run" => if(victim != None) position ! Room.GetExit(util.Random.nextInt(6)) else print("\nYou are not currently in battle.\n")
+            case "health" => out.println(s"\nCurrent health: $health\n")
             case _ => out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
         }
     }

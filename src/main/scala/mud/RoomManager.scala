@@ -15,10 +15,10 @@ class RoomManager extends Actor {
             val room:ActorRef = rooms.get(key).get
             player ! Player.AddPlayerToFirstRoom(room)
         case ShortestPath(currentRoom, destination) =>
-            if(currentRoom.path.name == destination){
-                sender ! Player.PrintMessage(s"You are already in $destination.")
-            // else if(!room.contains(destination))
-            }else{
+            if(currentRoom.path.name.toLowerCase == destination.toLowerCase){
+                sender ! Player.PrintMessage(s"\nYou are already in the $destination.\n")
+            }else if(!(rooms.map(_._1.toLowerCase).toList).contains(destination.toLowerCase)) sender ! Player.PrintMessage(s"\n$destination is not a valid room name. You can use \'listrooms\' to see all the available rooms.\n")
+            else{
                 val directions = shortestPath(currentRoom.path.name.toLowerCase, destination.toLowerCase, Set[String](), List[String]())
                 sender ! Player.PrintMessage("Steps: " + directions.length.toString)
                 var directionString = s"\nShortest path to the $destination:\n"
@@ -33,9 +33,11 @@ class RoomManager extends Actor {
     val rooms = readRooms()
     for(child <- context.children) child ! Room.LinkRooms(rooms)
 
-    def readRooms(): Map[String, ActorRef] = {
+    def readRooms(): BSTMap[String, ActorRef] = {
         val xmlData = xml.XML.loadFile("world.xml")
-        (xmlData \ "room").map(readRoom).toMap
+        val bst = new BSTMap[String, ActorRef](_ < _)
+        (xmlData \ "room").map(readRoom).foreach(room => bst += room)
+        bst
     }
 
     def readRoom(node: xml.Node): (String, ActorRef) = {

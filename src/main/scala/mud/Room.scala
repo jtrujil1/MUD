@@ -88,7 +88,7 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
 }
 
 object Room {
-    case class LinkRooms(links: Map[String, ActorRef])
+    case class LinkRooms(links: BSTMap[String, ActorRef])
     case object PrintDescription
     case class GetExit(dir: Int)
     case class GetItem(itemName: String)
