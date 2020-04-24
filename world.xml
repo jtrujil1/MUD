@@ -24,14 +24,14 @@
         <item name="grilled corn" damage="10" speed="10">
             <desc>One of the villagers' favorite street food.</desc>
         </item>
-        <exits>Dojo,House,-1,Lake,-1,-1</exits>
+        <exits>Dojo,-1,-1,Lake,-1,-1</exits>
     </room>
     <room name="Red Lake" keyword="Lake">
         <desc>You are now entering the vast forest surrounding the Red Lake. The lake gets its name from the vibrant mushrooms that grow all along the bottom of it, painting the water a bloody red color. But be careful, they're poisonous. To the east lies the Nanfang Village, you can almost smell the tasty food. Go south and you'll be surrounded by bamboo taller than the oldest trees.</desc>
         <item name="mushrooms" damage="15" speed="10">
             <desc>Good source of flavor for your enemy's soup.</desc>
         </item>
-        <exits>-1,Forest,Village,-1,-1,-1</exits>
+        <exits>-1,Forest,-1,-1,-1,House</exits>
     </room>
         <room name="Bamboo Forest" keyword="Forest">
         <desc>You are now entering the Bamboo Forest, there are so many trees it is hard to see ahead of you. Luckily, there's narrow path that was carved hundreds of years ago. Don't stray too far or you'll get lost. To the north lies the Red Lake, but look east and you'll see the beginnings of the poet's garden.</desc>
@@ -48,6 +48,6 @@
         <item name="calligraphy brush" damage="20" speed="22">
             <desc>An artist's favorite weapon of choice.</desc>
         </item>
-        <exits>Village,-1,-1,Forest,-1,-1</exits>
+        <exits>Dojo,-1,-1,-1,Village,-1</exits>
     </room>
 </world>

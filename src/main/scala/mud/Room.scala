@@ -6,7 +6,6 @@ import akka.actor.ActorRef
 class Room(val name: String, val desc: String, private var items: List[Item], val exitNames: Array[String]) extends Actor {
 
     private var playersInRoom= new mud.MutableDLList[ActorRef]()
-    private var npcsInRoom= new mud.MutableDLList[ActorRef]()
     
     import Room._
     def receive = {
@@ -68,11 +67,6 @@ class Room(val name: String, val desc: String, private var items: List[Item], va
         for (i <- 0 until playersInRoom.length) {
             descStr += playersInRoom(i).path.name
             if (i < playersInRoom.length - 1) descStr += ", "
-        }
-        if(!npcsInRoom.isEmpty) descStr += ", "
-        for (i <- 0 until npcsInRoom.length) {
-            descStr += npcsInRoom(i).path.name
-            if (i < npcsInRoom.length - 1) descStr += ", "
         }
         descStr + "\n"
     }

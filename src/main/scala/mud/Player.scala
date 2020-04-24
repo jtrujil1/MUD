@@ -103,32 +103,45 @@ class Player(val name: String,
     def processCommand(command: String): Unit = {
         val commandArray = command.split(" +", 2)
         commandArray(0).toLowerCase match{
-            case "look" => position ! Room.PrintDescription
-            case "inventory" | "inv" => out.println(inventoryListing())
+            case "look" =>
+                if(victim == None){
+                    position ! Room.PrintDescription
+                }else out.println("\nYou cannot do this during combat.\n")
+            case "inventory" | "inv" => 
+                if(victim == None){
+                    out.println(inventoryListing())
+                }else out.println("\nYou cannot do this during combat.\n")
             case "get" =>
-                position ! Room.GetItem(commandArray(1).trim)
+                if(victim == None){
+                    position ! Room.GetItem(commandArray(1).trim)
+                } else out.println("\nYou cannot do this during combat.\n")
             case "drop" =>
-                val item = getFromInventory(commandArray(1).trim)
-                if(item != None){
-                    position ! Room.DropItem(item.get)
-                    out.println(s"\nYou have dropped the ${item.get.name} in the ${position.path.name}.\n")
-                }else{
-                    out.println("\nThat item is not in your inventory.\n")
-            }
+                if(victim == None){
+                    val item = getFromInventory(commandArray(1).trim)
+                    if(item != None){
+                        position ! Room.DropItem(item.get)
+                        out.println(s"\nYou have dropped the ${item.get.name} in the ${position.path.name}.\n")
+                    }else{
+                        out.println("\nThat item is not in your inventory.\n")
+                    }
+                }else out.println("\nYou cannot do this during combat.\n")
             case "help" =>
                 out.println("""All Commands:
                 north, south, east, west, up, down - for movement (abbreviations also work)
                 look - reprints the description of the current room
                 inv/inventory - list the contents of your inventory
-                get item - to get an item from the room and add it to your inventory
-                drop item - to drop an item from your inventory into the room
-                say message - to communicate with everyone in your current room
-                tell player message - to communicate with a user anywhere in the MUD
-                equip/unequip - to pick which weapon in your inventory you are currently using
-                kill player - to initiate combat
+                get *item* - to get an item from the room and add it to your inventory
+                drop *item* - to drop an item from your inventory into the room
+                say *message* - to communicate with everyone in your current room
+                tell *player* *message* - to communicate with a user anywhere in the MUD
+                listrooms - to list the names of all the available rooms
+                shortestpath *room* - to list the directions for the shortest path to the room
+                equip/unequip *item* - to pick which weapon in your inventory you are currently using
+                kill *player* - to initiate combat
                 flee/run away - to flee combat 
                 exit - leave the game
-                help - print the available commands and what they do""")
+                help - print the available commands and what they do
+                do not forget, while in combat you can only fight or flee""")
             case "exit" =>
                 position ! Room.RemovePlayer
                 out.println("\nThank you for playing.\n")
@@ -141,36 +154,55 @@ class Player(val name: String,
             case "up" | "u" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
             case "down" | "d" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
             case "say" => 
-                val msg = commandArray(1)
-                position ! Room.SayMessage(name, msg)
+                if(victim == None){
+                    val msg = commandArray(1)
+                    position ! Room.SayMessage(name, msg)
+                }else out.println("\nYou cannot do this during combat.\n")
             case "tell" => 
-                val receiver = commandArray(1).split(" +", 2)(0)
-                val msg = commandArray(1).split(" +", 2)(1)
-                Main.playerManager ! PlayerManager.TellPlayer(name, receiver, msg)
-            case "equip" => 
-                val weapon = getFromInventory(commandArray(1).trim)
-                if(weapon != None){
-                    if(currentWeapon != defaultWeapon){
-                        addToInventory(currentWeapon)
-                    }
-                    currentWeapon = weapon.get
-                    out.println(s"\nYou are now using ${currentWeapon.name}.\n")
-                } else out.println("\nThat item is not in your inventory.\n")
+                if(victim == None){
+                    val receiver = commandArray(1).split(" +", 2)(0)
+                    val msg = commandArray(1).split(" +", 2)(1)
+                    Main.playerManager ! PlayerManager.TellPlayer(name, receiver, msg)
+                }else out.println("\nYou cannot do this during combat.\n")
+            case "shortestpath" =>
+                if(victim == None){
+                    val destination = commandArray(1)
+                    Main.roomManager ! RoomManager.ShortestPath(position, destination)
+                }else out.println("\nYou cannot do this during combat.\n")
+            case "listrooms" | "list" =>
+                if(victim == None){
+                    out.println("\nRooms:\n- Dojo\n- Village\n- Lake\n- Forest\n- House")
+                }else out.println("\nYou cannot do this during combat.\n")
+            case "equip" =>
+                if(victim == None){
+                    val weapon = getFromInventory(commandArray(1).trim)
+                    if(weapon != None){
+                        if(currentWeapon != defaultWeapon){
+                            addToInventory(currentWeapon)
+                        }
+                        currentWeapon = weapon.get
+                        out.println(s"\nYou are now using ${currentWeapon.name}.\n")
+                    } else out.println("\nThat item is not in your inventory.\n")
+                }else out.println("\nYou cannot do this during combat.\n")
             case "unequip" =>
-                if(commandArray.length > 1){
-                    val weapon = commandArray(1).trim
-                    if(weapon == currentWeapon.name){
+                if(victim == None){
+                    if(commandArray.length > 1){
+                        val weapon = commandArray(1).trim
+                        if(weapon == currentWeapon.name){
+                            addToInventory(currentWeapon)
+                            currentWeapon = defaultWeapon
+                        } else out.println("\nYou are not currently using that weapon.\n")
+                    }else if(currentWeapon != defaultWeapon){
                         addToInventory(currentWeapon)
                         currentWeapon = defaultWeapon
-                    } else out.println("\nYou are not currently using that weapon.\n")
-                }else if(currentWeapon != defaultWeapon){
-                    addToInventory(currentWeapon)
-                    currentWeapon = defaultWeapon
-                }
-            case "kill" => 
-                val fighter = commandArray(1).trim
-                position ! Room.GetPlayer(fighter)
-            case "flee" | "run" => position ! Room.GetExit(util.Random.nextInt(6))
+                    }
+                }else out.println("\nYou cannot do this during combat.\n")
+            case "kill" =>
+                if(victim == None){
+                    val fighter = commandArray(1).trim
+                    position ! Room.GetPlayer(fighter)
+                }else out.println("\nYou cannot do this during combat.\n")
+            case "flee" | "run" => if(victim != None) position ! Room.GetExit(util.Random.nextInt(6)) else print("\nYou are not currently in battle.\n")
             case _ => out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
         }
     }
