@@ -6,7 +6,7 @@ import akka.actor.ActorRef
 
 class ActivityManager extends Actor {
     import ActivityManager._
-    val pq = new mud.SortedLLPQ[Event](_.time < _.time)
+    val pq = new mud.BinaryHeap[Event](_.time < _.time)
     private var now = 0
 
     def receive = {
