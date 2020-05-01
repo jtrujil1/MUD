@@ -113,16 +113,22 @@ class Player(val name: String,
                 }else out.println("\nYou cannot do this during combat.\n")
             case "get" =>
                 if(victim == None){
-                    position ! Room.GetItem(commandArray(1).trim)
+                    if(commandArray.length == 1) out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
+                    else{
+                        position ! Room.GetItem(commandArray(1).trim)
+                    }
                 } else out.println("\nYou cannot do this during combat.\n")
             case "drop" =>
                 if(victim == None){
-                    val item = getFromInventory(commandArray(1).trim)
-                    if(item != None){
-                        position ! Room.DropItem(item.get)
-                        out.println(s"\nYou have dropped the ${item.get.name} in the ${position.path.name}.\n")
-                    }else{
-                        out.println("\nThat item is not in your inventory.\n")
+                    if(commandArray.length == 1) out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
+                    else{
+                        val item = getFromInventory(commandArray(1).trim)
+                        if(item != None){
+                            position ! Room.DropItem(item.get)
+                            out.println(s"\nYou have dropped the ${item.get.name} in the ${position.path.name}.\n")
+                        }else{
+                            out.println("\nThat item is not in your inventory.\n")
+                        }
                     }
                 }else out.println("\nYou cannot do this during combat.\n")
             case "help" =>
@@ -155,19 +161,28 @@ class Player(val name: String,
             case "down" | "d" => if(victim != None) out.println("\nYou cannot leave a fight this way. Try rurnning away.\n") else move(command)
             case "say" => 
                 if(victim == None){
-                    val msg = commandArray(1)
-                    position ! Room.SayMessage(name, msg)
+                    if(commandArray.length == 1) out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
+                    else{
+                        val msg = commandArray(1)
+                        position ! Room.SayMessage(name, msg)
+                    }
                 }else out.println("\nYou cannot do this during combat.\n")
             case "tell" => 
                 if(victim == None){
-                    val receiver = commandArray(1).split(" +", 2)(0)
-                    val msg = commandArray(1).split(" +", 2)(1)
-                    Main.playerManager ! PlayerManager.TellPlayer(name, receiver, msg)
+                    if(commandArray.length == 1) out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
+                    else{
+                        val receiver = commandArray(1).split(" +", 2)(0)
+                        val msg = commandArray(1).split(" +", 2)(1)
+                        Main.playerManager ! PlayerManager.TellPlayer(name, receiver, msg)
+                    }
                 }else out.println("\nYou cannot do this during combat.\n")
             case "shortestpath" =>
                 if(victim == None){
-                    val destination = commandArray(1)
-                    Main.roomManager ! RoomManager.ShortestPath(position, destination)
+                    if(commandArray.length == 1) out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
+                    else{
+                        val destination = commandArray(1)
+                        Main.roomManager ! RoomManager.ShortestPath(position, destination)
+                    }
                 }else out.println("\nYou cannot do this during combat.\n")
             case "listrooms" | "list" =>
                 if(victim == None){
@@ -175,14 +190,17 @@ class Player(val name: String,
                 }else out.println("\nYou cannot do this during combat.\n")
             case "equip" =>
                 if(victim == None){
-                    val weapon = getFromInventory(commandArray(1).trim)
-                    if(weapon != None){
-                        if(currentWeapon != defaultWeapon){
-                            addToInventory(currentWeapon)
-                        }
-                        currentWeapon = weapon.get
-                        out.println(s"\nYou are now using ${currentWeapon.name}.\n")
-                    } else out.println("\nThat item is not in your inventory.\n")
+                    if(commandArray.length == 1) out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
+                    else{
+                        val weapon = getFromInventory(commandArray(1).trim)
+                        if(weapon != None){
+                            if(currentWeapon != defaultWeapon){
+                                addToInventory(currentWeapon)
+                            }
+                            currentWeapon = weapon.get
+                            out.println(s"\nYou are now using the ${currentWeapon.name}.\n")
+                        } else out.println("\nThat item is not in your inventory.\n")
+                    }
                 }else out.println("\nYou cannot do this during combat.\n")
             case "unequip" =>
                 if(victim == None){
@@ -198,10 +216,13 @@ class Player(val name: String,
                     }
                 }else out.println("\nYou cannot do this during combat.\n")
             case "kill" =>
-                if(victim == None){
-                    val fighter = commandArray(1).trim
-                    position ! Room.GetPlayer(fighter)
-                }else out.println("\nYou cannot do this during combat.\n")
+                if(commandArray.length == 1) out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
+                else{
+                    if(victim == None){
+                        val fighter = commandArray(1).trim
+                        position ! Room.GetPlayer(fighter)
+                    }else out.println("\nYou cannot do this during combat.\n")
+                }
             case "flee" | "run" => if(victim != None) position ! Room.GetExit(util.Random.nextInt(6)) else print("\nYou are not currently in battle.\n")
             case "health" => out.println(s"\nCurrent health: $health\n")
             case _ => out.println("\nPlease enter a valid command. If you want to look at the available commands enter \"help\".\n") 
