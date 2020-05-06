@@ -7,3 +7,11 @@ the full room description, not just the name.
 ## Show Code #6 (4 of 4 points)
 
 The actor-based MUD compiles and runs the way it should.
+
+## Show Code #7 (4 of 4 points)
+
+I can log in multiple players and have them communicate.
+
+## Show Code #12 (4 of 4 points)
+
+There is a binary heap being used by the activity manager and the NPCs still move around.
